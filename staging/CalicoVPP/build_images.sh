@@ -9,8 +9,6 @@ function usage {
         build_images.sh is used to build docker images for Calico VPP with DSA testing. After building, below images will be generated,
             calicovpp_dsa_vpp:v1
             calicovpp_dsa_agent:v1
-            calicovpp_dsa_vppl3fwd_tun:v1
-            calicovpp_dsa_vppl3fwd_memif:v1
 
         Usage:
             ./build_images.sh [--help|-h]

@@ -6,38 +6,26 @@ source ./common.sh
 function usage {
     cat <<EOF
 
-        config_env.sh is used to configure K8S and VPP L3FWD for Calico VPP testing. 
+        config_env.sh is used to configure K8S. 
         Before run this script, please run 'install_env.sh' to install testing environment and run 'build_images.sh' to build necessary docker images.
 
         Usage:
-            ./config_env.sh --mode dsa[sw|tun] --ipv4 <ipv4-address> [--mtu 1500|9000] [--cidr <K8S-pod-CIDR>] [--dsa-device <dsa-device-pci-num>]
-                [--core-nums <core-numbers>] [--vpp-cores-start <vpp-cores-start-number>] [--l3fwd-cores-start <l3fwd-cores-start-number>]
-                [--neighbor-ip <neighbor-ip-address>] [--packet-ips <packet-source-ip-ranges>] [--packet-mac <packet-source-mac-address>] [--help|-h]
+            ./config_env.sh --mode dsa[sw] --ipv4 <ipv4-address> [--mtu 1500|9000] [--cidr <K8S-pod-CIDR>] [--dsa-device <dsa-device-pci-num>]
+                [--core-nums <core-numbers>] [--help|-h]
 
         Examples:
-            ./config_env.sh --mode dsa --ipv4 192.168.0.11                                    # Configure K8S with DSA memif interface
-            ./config_env.sh --mode dsa --mtu 9000 --ipv4 192.168.0.11                         # Configure K8S with DSA memif interface and mtu 9000
-            ./config_env.sh --mode sw --ipv4 192.168.0.11 --core_nums 2                       # Configure K8S with SW memif interface and 2 CPU cores
-            ./config_env.sh --mode tun --ipv4 192.168.0.11                                    # Configure K8S with TUN interface
+            ./config_env.sh --mode dsa --ipv4 192.168.0.11                                    # Configure K8S with DSA interface
+            ./config_env.sh --mode dsa --mtu 9000 --ipv4 192.168.0.11                         # Configure K8S with DSA interface and mtu 9000
+            ./config_env.sh --mode sw --ipv4 192.168.0.11 --core_nums 2                       # Configure K8S with SW interface and 2 CPU cores
 
         Parameters:
-            --mode dsa[sw|tun]: [Required] Specify testing mode, value can be 'dsa', 'sw' or 'tun' for DSA memif, SW memif and TUN interface testing.
+            --mode dsa[sw]: [Required] Specify testing mode, value can be 'dsa' or 'sw' for DSA or SW mode.
             --ipv4 <ipv4-address>: [Required] Specify ipv4 address on which K8S will be installed, generally, it's node private IPv4 address with 100Gbps bandwidth.
             --mtu 1500|9000: [Optional] Specify MTU, value can be 1500 or 9000. Default is 1500.
             --cidr <K8S-pod-CIDR>: [Optional] Specify K8S pod CIDR. Default is 10.244.0.0/16. Change default value only when it conflicts with testing environment.
             --dsa-device <dsa-device-pci-num>: [Optional] Specify DSA device pci number for DSA memif testing, will get the first DSA device (for example: 6a:01.0) 
                 if not specify this parameter. Run command "lspci -v | grep 0b25" can get DSA device list.
             --core-nums <core-numbers>: [Optional] Specify how many CPU cores will be used for the testing. Default is 1.
-            --vpp-cores-start <vpp-cores-start-number>: [Optional] Specify which CPU core VPP starts from. Default is 0, which means 0 for VPP main, 1-$core_nums for 
-                VPP workers.
-            --l3fwd-cores-start <l3fwd-cores-start-number>: [Optional] Specify which CPU core L3FWD starts from. Default is 16, which means 16 for L3FWD main, 
-                17-$core_nums for L3FWD workers
-            --neighbor-ip <neighbor-ip-address>: [Optional] Specify the neighbor ipv4 address for VPP new route. Default is 10.10.11.1. Change default value only when 
-                it conflicts with testing environment.
-            --packet-ips <packet-source-ip-ranges>: [Optional] Specify the packet source ipv4 ranges. Default is 10.10.10.1/24. Change default value only when it 
-                conflicts with testing environment.
-            --packet-mac <packet-source-mac-address>: [Optional] Specify the packet source mac address. Default is 10:00:00:00:00:00. Change default value only when it 
-                conflicts with testing environment.
             --help|-h: [Optional] Show help messages.
 
 EOF
@@ -54,18 +42,10 @@ function check_conditions() {
     check_if_has_configured
     check_required_parameters
     check_and_get_interface_by_ipv4
-    check_vpp_l3fwd_cores_conflicts
     if [[ "$config_mode" = "$CONFIG_MODE_DSA_MEMIF" ]]; then
         check_and_get_default_dsa_device
         bind_dsa_device
         check_calicovpp_dsa_images
-        check_l3fwd_dsa_sw_image
-    fi
-    if [[ "$config_mode" = "$CONFIG_MODE_SW_MEMIF" ]]; then 
-        check_l3fwd_dsa_sw_image
-    fi
-    if [[ "$config_mode" = "$CONFIG_MODE_TUN" ]]; then 
-        check_l3fwd_tun_image
     fi
 }
 
@@ -85,23 +65,6 @@ function check_and_get_default_dsa_device() {
 # Bind DSA device
 function bind_dsa_device() {
     sudo dpdk-devbind.py -b vfio-pci "$dsa_device" > /dev/null 2>&1 || error "Failed to bind DSA device: $dsa_device"
-}
-
-# Check below condations:
-# 1. VPP cores and L3FWD cores should not have overlapping parts, for example, if VPP uses cores 0-8, then L3FWD cannot use cores 0-8.
-# 2. vpp-cores-start + core_nums + 1 should <= CPU_CORE_SIZE
-# 3. l3fwd_cores_start + core_nums + 1 should <= CPU_CORE_SIZE
-function check_vpp_l3fwd_cores_conflicts() {
-    [[ $vpp_cores_start -ne $l3fwd_cores_start ]] || \
-        error "--vpp-cores-start cannot be the same as --l3fwd-cores-start, --vpp-cores-start: $vpp_cores_start, --l3fwd-cores-start: $l3fwd_cores_start"
-    max=$(( vpp_cores_start > l3fwd_cores_start ? vpp_cores_start : l3fwd_cores_start ))
-    min=$(( vpp_cores_start < l3fwd_cores_start ? vpp_cores_start : l3fwd_cores_start ))
-    [[ $(( max - min )) -gt $core_nums ]] || \
-        error "VPP cores and L3FWD cores cannot have overlapping parts, --vpp-cores-start: $vpp_cores_start, --l3fwd-cores-start: $l3fwd_cores_start, --core-nums: $core_nums"
-    [[ $(( vpp_cores_start + core_nums + 1 )) -le $CPU_CORE_SIZE ]] || \
-        error "--vpp-cores-start is too large, --vpp-cores-start: $vpp_cores_start, --core-nums: $core_nums"
-    [[ $(( l3fwd_cores_start + core_nums + 1 )) -le $CPU_CORE_SIZE ]] || \
-        error "--l3fwd-cores-start is too large, --l3fwd-cores-start: $l3fwd_cores_start, --core-nums: $core_nums"
 }
 
 # Check and get NIC interface by IPV4 address
@@ -168,15 +131,6 @@ function prepare_calicovpp_sw_yaml_files() {
     [[ "$mtu" = "$MTU_9000" ]] && sed -i "s|buffers-per-numa.*|default data-size 10240|g" "$CALICOVPP_DEP_YAML"
 }
 
-# Prepar Calico VPP TUN relate yaml files
-function prepare_calicovpp_tun_yaml_files() {
-    info "Preparing Calico VPP TUN yaml files..."
-    cp "$CALICOVPP_OPERATOR_TMP_YAML" "$CALICOVPP_OPERATOR_DEP_YAML"
-    cp "$CALICOVPP_INSTALLATION_TMP_YAML" "$CALICOVPP_INSTALLATION_DEP_YAML"
-    cp "$CALICOVPP_NO_DSA_TMP_YAML" "$CALICOVPP_DEP_YAML"
-    update_common_params_of_vpp_yaml
-}
-
 # Init K8S and CNI
 function init_k8s_and_cni() {
     info "Initializing K8S, this may take some time..."
@@ -187,9 +141,11 @@ function init_k8s_and_cni() {
     sudo chown "$(id -u):$(id -g)" "$HOME/.kube/config"
     kubectl taint nodes --all node-role.kubernetes.io/master-
     info "Installing CNI..."
-    kubectl apply -f "$CALICOVPP_OPERATOR_DEP_YAML"
-    kubectl apply -f "$CALICOVPP_INSTALLATION_DEP_YAML"
-    kubectl apply -f "$CALICOVPP_DEP_YAML"
+    kubectl create -f "$CALICOVPP_OPERATOR_DEP_YAML"
+    sleep 5
+    kubectl create -f "$CALICOVPP_INSTALLATION_DEP_YAML"
+    sleep 5
+    kubectl create -f "$CALICOVPP_DEP_YAML"
 }
 
 # Wait for K8S to be ready
@@ -236,31 +192,6 @@ function install_calivppctl_and_config_route() {
     calivppctl vppctl "$node_name" ip route add "$packet_ips" via "$neighbor_ip" "$ethernet_name"
 }
 
-# Wait for L3FWD pod to be ready
-function wait_l3fwd_ready() {
-    for i in $(seq 10); do
-        l3fwd_pod_num=$(kubectl get pod -A | grep -c -e "vpp-l3fwd.*1/1\s*Running")
-        if [[ $l3fwd_pod_num -lt 1 ]]; then
-            info "Waiting for L3FWD pod to be ready...#${i}"
-            sleep 5
-        else
-            l3fwd_pod_ip=$(kubectl get pod -A -o wide | grep -e "vpp-l3fwd.*1/1\s*Running" | awk '{print $7}')
-            info "L3FWD pod is ready."
-            return
-        fi
-    done
-    error "L3FWD is not ready, please check pod status for troubleshooting."
-}
-
-# Update L3FWD yaml params and start pod
-function update_l3fwd_params_and_start_pod() {
-    sed -i "s|MTU_TMP_VALUE|${mtu}|g" "$L3FWD_DEP_YAML"
-    sed -i "s|L3FWD_CORES_START_TMP_VALUE|${l3fwd_cores_start}|g" "$L3FWD_DEP_YAML"
-    sed -i "s|CORE_NUMS_TMP_VALUE|${core_nums}|g" "$L3FWD_DEP_YAML"
-    kubectl apply -f "$L3FWD_DEP_YAML"
-    wait_l3fwd_ready
-}
-
 # Save configuration parameters to file
 function save_configuration_parameters() {
     {
@@ -273,27 +204,8 @@ function save_configuration_parameters() {
         echo "DSA device: ${dsa_device:-N/A}"
         echo "Core numbers: $core_nums"
         echo "VPP cores start: $vpp_cores_start"
-        echo "L3FWD cores start: $l3fwd_cores_start"
-        echo "VPP neighbor ip: $neighbor_ip"
-        echo "VPP L3FWD pod ipv4 address: $l3fwd_pod_ip"
         echo "Calico VPP MAC address: $interface_mac"
-        echo "Packet source IPs range: $packet_ips"
-        echo "Packet source MAC address: $packet_mac"
     } > "$CONFIG_PARAMS_FILE"
-}
-
-# Install and configure L3FWD pod for DSA/SW memif interface
-function install_and_config_dsa_sw_l3fwd() {
-    info "Deploying L3FWD pod for DSA/SW memif testing..."
-    cp "$L3FWD_MEMIF_TMP_YAML" "$L3FWD_DEP_YAML"
-    update_l3fwd_params_and_start_pod
-}
-
-# Install and configure L3FWD pod for TUN interface
-function install_and_config_tun_l3fwd() {
-    info "Deploying L3FWD pod for TUN memif testing..."
-    cp "$L3FWD_TUN_TMP_YAML" "$L3FWD_DEP_YAML"
-    update_l3fwd_params_and_start_pod
 }
 
 function config_k8s_dsa() {
@@ -303,7 +215,6 @@ function config_k8s_dsa() {
     init_k8s_and_cni
     wait_k8s_ready
     install_calivppctl_and_config_route
-    install_and_config_dsa_sw_l3fwd
 }
 
 function config_k8s_sw() {
@@ -313,17 +224,6 @@ function config_k8s_sw() {
     init_k8s_and_cni
     wait_k8s_ready
     install_calivppctl_and_config_route
-    install_and_config_dsa_sw_l3fwd
-}
-
-function config_k8s_tun() {
-    info "Configuring K8S with TUN interface..."
-    configure_mtu
-    prepare_calicovpp_tun_yaml_files
-    init_k8s_and_cni
-    wait_k8s_ready
-    install_calivppctl_and_config_route
-    install_and_config_tun_l3fwd
 }
 
 ##############################################################
@@ -331,7 +231,6 @@ function config_k8s_tun() {
 # Defines config modes
 CONFIG_MODE_DSA_MEMIF="dsa"
 CONFIG_MODE_SW_MEMIF="sw"
-CONFIG_MODE_TUN="tun"
 
 # Supported MTU
 MTU_1500="1500"
@@ -350,16 +249,11 @@ cidr="10.244.0.0/16"
 dsa_device=""
 core_nums=1                       # Single core testing
 vpp_cores_start=0                 # 0 for VPP main, 1-$core_nums for VPP workers
-l3fwd_cores_start=16              # 16 for L3FWD main, 17-$core_nums for L3FWD workers
-neighbor_ip="10.10.11.1"          # No need to change it for most scenarios
-packet_ips="10.10.10.1/24"        # No need to change it for most scenarios
-packet_mac="10:00:00:00:00:00"    # No need to change it for most scenarios
 
 # Parameters that will be used for deployment and E2E testing
 interface=""
 interface_pci=""
 interface_mac=""
-l3fwd_pod_ip=""
 
 # Source yaml files used to deploy Calico VPP
 CALICOVPP_OPERATOR_TMP_YAML=$CONFIGS_DIR/tigera-operator.yaml
@@ -371,12 +265,6 @@ CALICOVPP_OPERATOR_DEP_YAML=$CONFIGS_DEP_DIR/tigera-operator.yaml
 CALICOVPP_INSTALLATION_DEP_YAML=$CONFIGS_DEP_DIR/installation-default.yaml
 CALICOVPP_DEP_YAML=$CONFIGS_DEP_DIR/calico-vpp.yaml
 
-# Source yaml files used to deploy L3FWD
-L3FWD_MEMIF_TMP_YAML=$CONFIGS_DIR/l3fwd_memif.yaml
-L3FWD_TUN_TMP_YAML=$CONFIGS_DIR/l3fwd_tun.yaml
-# Target yaml files used to deploy L3FWD
-L3FWD_DEP_YAML=$CONFIGS_DEP_DIR/l3fwd.yaml
-
 # Parse input arguments
 UNKNOWN_ARGS=""
 while [[ "$1" != "" ]]
@@ -386,7 +274,7 @@ do
         --mode)
             shift
             check_not_empty "$arg" "$1"
-            mode_values=("$CONFIG_MODE_DSA_MEMIF" "$CONFIG_MODE_SW_MEMIF" "$CONFIG_MODE_TUN")
+            mode_values=("$CONFIG_MODE_DSA_MEMIF" "$CONFIG_MODE_SW_MEMIF")
             check_value_exist "$arg" "$1" "${mode_values[@]}"
             config_mode=$1
             ;;
@@ -427,30 +315,6 @@ do
             check_number_in_range "$arg" "$1" 0 $((CPU_CORE_SIZE - 1))
             vpp_cores_start=$1
             ;;
-        --l3fwd-cores-start)
-            shift
-            check_not_empty "$arg" "$1"
-            check_number_in_range "$arg" "$1" 0 $((CPU_CORE_SIZE - 1))
-            l3fwd_cores_start=$1
-            ;;
-        --neighbor-ip)
-            shift
-            check_not_empty "$arg" "$1"
-            check_ipv4_address "$arg" "$1"
-            neighbor_ip=$1
-            ;;
-        --packet-ips)
-            shift
-            check_not_empty "$arg" "$1"
-            check_cidr "$arg" "$1"
-            packet_ips=$1
-            ;;
-        --packet-mac)
-            shift
-            check_not_empty "$arg" "$1"
-            check_mac_address "$arg" "$1"
-            packet_mac=$1
-            ;;
         --help|-h)
             usage && exit
             ;;
@@ -471,8 +335,6 @@ if [[ "$config_mode" = "$CONFIG_MODE_DSA_MEMIF" ]]; then
     config_k8s_dsa
 elif [[ "$config_mode" = "$CONFIG_MODE_SW_MEMIF" ]]; then
     config_k8s_sw
-elif [[ "$config_mode" = "$CONFIG_MODE_TUN" ]]; then
-    config_k8s_tun
 else
     error "Unknow configuration mode: $config_mode"
 fi

@@ -135,8 +135,7 @@ subjects:
 ---
 apiVersion: v1
 data:
-  service_prefix: 10.96.0.0/12
-  vpp_config_template: |-
+  CALICOVPP_CONFIG_TEMPLATE: |-
     unix {
       nodaemon
       full-coredump
@@ -153,22 +152,54 @@ data:
         socket-name /var/run/vpp/vpp-api.sock
     }
     dpdk {
-      dev __PCI_DEVICE_ID__ { num-rx-queues CALICOVPP_CORES_VALUE_TMP num-tx-queues CALICOVPP_CORES_VALUE_TMP }
+      dev __PCI_DEVICE_ID__ { num-rx-queues CALICOVPP_CORES_VALUE_TMP num-tx-queues CALICOVPP_CORES_VALUE_TMP tag main-VPP_DATAPLANE_INTERFACE_VALUE_TMP}
+    }
+    dsa {
+      dev DSA_DEVICE_VALUE_TMP
     }
     plugins {
         plugin default { enable }
         plugin dpdk_plugin.so { enable }
         plugin calico_plugin.so { enable }
         plugin ping_plugin.so { disable }
+        plugin dispatch_trace_plugin.so { enable }
     }
     buffers {
       buffers-per-numa 131072
     }
-    dsa {
-      dev DSA_DEVICE_VALUE_TMP
+  CALICOVPP_INITIAL_CONFIG: |-
+    {
+      "vppStartupSleepSeconds": 1,
+      "corePattern": "/var/lib/vpp/vppcore.%e.%p"
     }
-  vpp_dataplane_interface: VPP_DATAPLANE_INTERFACE_VALUE_TMP
-  vpp_uplink_driver: "dpdk"
+  CALICOVPP_INTERFACES: |-
+    {
+      "maxPodIfSpec": {
+        "rx": 10, "tx": 10, "rxqsz": 1024, "txqsz": 1024
+      },
+      "defaultPodIfSpec": {
+        "rx": 1, "tx":1, "isl3": true
+      },
+      "vppHostTapSpec": {
+        "rx": CALICOVPP_CORES_VALUE_TMP, "tx": CALICOVPP_CORES_VALUE_TMP, "rxqsz": 1024, "txqsz": 1024, "isl3": false
+      },
+      "uplinkInterfaces": [
+        {
+          "interfaceName": "VPP_DATAPLANE_INTERFACE_VALUE_TMP",
+          "vppDriver": "dpdk",
+          "rxMode": "polling"
+        }
+      ]
+    }
+  CALICOVPP_FEATURE_GATES: |-
+    {
+      "memifEnabled": true,
+      "vclEnabled": true,
+      "multinetEnabled": false,
+      "srv6Enabled": false,
+      "ipsecEnabled": false
+    }
+  SERVICE_PREFIX: 10.96.0.0/12
 kind: ConfigMap
 metadata:
   name: calico-vpp-config
@@ -192,28 +223,6 @@ spec:
     spec:
       containers:
       - env:
-        - name: CALICOVPP_NATIVE_DRIVER
-          valueFrom:
-            configMapKeyRef:
-              key: vpp_uplink_driver
-              name: calico-vpp-config
-        - name: CALICOVPP_IP_CONFIG
-          value: linux
-        - name: CALICOVPP_INTERFACE
-          valueFrom:
-            configMapKeyRef:
-              key: vpp_dataplane_interface
-              name: calico-vpp-config
-        - name: CALICOVPP_CONFIG_TEMPLATE
-          valueFrom:
-            configMapKeyRef:
-              key: vpp_config_template
-              name: calico-vpp-config
-        - name: SERVICE_PREFIX
-          valueFrom:
-            configMapKeyRef:
-              key: service_prefix
-              name: calico-vpp-config
         - name: DATASTORE_TYPE
           value: kubernetes
         - name: WAIT_FOR_DATASTORE
@@ -222,9 +231,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        - name: CALICOVPP_CORE_PATTERN
-          value: /var/lib/vpp/vppcore.%e.%p
-        image: calicovpp_dsa_vpp:v1
+        envFrom:
+        - configMapRef:
+            name: calico-vpp-config
+        image: docker.io/calicovpp/vpp:v3.25.1
         imagePullPolicy: IfNotPresent
         name: vpp
         resources:
@@ -244,8 +254,6 @@ spec:
           name: vpp-data
         - mountPath: /etc/vpp
           name: vpp-config
-        - mountPath: /var/log/vpp
-          name: vpp-log
         - mountPath: /dev
           name: devices
         - mountPath: /sys
@@ -256,12 +264,6 @@ spec:
         - mountPath: /host
           name: host-root
       - env:
-        - name: CALICOVPP_ENABLE_MEMIF
-          value: "true"
-        - name: CALICOVPP_TAP_RX_QUEUES
-          value: "CALICOVPP_CORES_VALUE_TMP"
-        - name: CALICOVPP_TAP_TX_QUEUES
-          value: "CALICOVPP_CORES_VALUE_TMP"
         - name: DATASTORE_TYPE
           value: kubernetes
         - name: WAIT_FOR_DATASTORE
@@ -270,12 +272,14 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        - name: SERVICE_PREFIX
+        - name: NAMESPACE
           valueFrom:
-            configMapKeyRef:
-              key: service_prefix
-              name: calico-vpp-config
-        image: calicovpp_dsa_agent:v1
+            fieldRef:
+              fieldPath: metadata.namespace
+        envFrom:
+        - configMapRef:
+            name: calico-vpp-config
+        image: docker.io/calicovpp/agent:v3.25.1
         imagePullPolicy: IfNotPresent
         name: agent
         resources:
@@ -323,9 +327,6 @@ spec:
       - hostPath:
           path: /etc/vpp
         name: vpp-config
-      - hostPath:
-          path: /etc/vpp/logs
-        name: vpp-log
       - hostPath:
           path: /dev
         name: devices

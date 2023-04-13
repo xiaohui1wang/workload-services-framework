@@ -10,7 +10,7 @@ spec:
     linuxDataplane: VPP
     ipPools:
       - cidr: CIDR_VALUE_TMP
-        mtu: MTU_VALUE_TMP
+    mtu: MTU_VALUE_TMP
 
 ---
 

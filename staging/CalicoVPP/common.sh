@@ -126,13 +126,3 @@ function check_calicovpp_dsa_images() {
     docker images | grep  -q -e "^calicovpp_dsa_vpp *v" || error "Cannot find Docker image: calicovpp_dsa_vpp:v1"
     docker images | grep  -q -e "^calicovpp_dsa_agent *v1" || error "Cannot find Docker image: calicovpp_dsa_agent:v1"
 }
-
-# Check l3fwd dsa/sw image
-function check_l3fwd_dsa_sw_image() {
-    docker images | grep  -q -e "^calicovpp_dsa_vppl3fwd_memif *v1" || error "Cannot find Docker image: calicovpp_dsa_vppl3fwd_memif:v1"
-}
-
-# Check l3fwd tun image
-function check_l3fwd_tun_image() {
-    docker images | grep  -q -e "^calicovpp_dsa_vppl3fwd_tun *v1" || error "Cannot find Docker image: calicovpp_dsa_vppl3fwd_tun:v1"
-}
