@@ -153,10 +153,13 @@ data:
     }
     dpdk {
       dev __PCI_DEVICE_ID__ { num-rx-queues CALICOVPP_CORES_VALUE_TMP num-tx-queues CALICOVPP_CORES_VALUE_TMP tag main-VPP_DATAPLANE_INTERFACE_VALUE_TMP}
+      no-dsa
     }
     dsa {
-      dev DSA_DEVICE_VALUE_TMP
+      dev wq0.0
+      dev wq0.1
     }
+    session { enable use-dma }
     plugins {
         plugin default { enable }
         plugin dpdk_plugin.so { enable }
