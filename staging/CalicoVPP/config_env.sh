@@ -184,12 +184,6 @@ function install_calivppctl_and_config_route() {
     # Install 'calivppctl'
     container=$(docker ps | grep vpp_calico-vpp | awk '{ print $1 }')
     sudo docker cp "$container:/usr/bin/calivppctl" /usr/bin/calivppctl
-    # Configure route
-    info "Configuring VPP route..."
-    node_name=$(kubectl get node | grep "master" | grep "Ready" | awk '{print $1}' | head -1)
-    ethernet_name=$(calivppctl vppctl "$node_name" "show interface address" | grep Ethernet | awk '{print $1}' | head -1)
-    calivppctl vppctl "$node_name" set ip neighbor "$ethernet_name" "$neighbor_ip" "$packet_mac"
-    calivppctl vppctl "$node_name" ip route add "$packet_ips" via "$neighbor_ip" "$ethernet_name"
 }
 
 # Save configuration parameters to file
