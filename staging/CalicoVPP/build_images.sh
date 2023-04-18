@@ -105,6 +105,8 @@ do
 done
 [[ -z "$UNKNOWN_ARGS" ]] || error "Unknown arguments:$UNKNOWN_ARGS"
 
+error "Building images is not supported in this branch."
+
 BASE_DIR=$(pwd)
 CALICOVPP_DIR="${BASE_DIR}/vpp-dataplane"
 VPP_DIR="${BASE_DIR}/vpp"
