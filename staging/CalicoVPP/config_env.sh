@@ -154,6 +154,7 @@ function wait_k8s_ready() {
         apiserver_pod_num=$(kubectl get pod -A | grep -c -e "calico-apiserver\s*calico-apiserver.*1/1\s*Running")
         if [[ $apiserver_pod_num -lt 2 ]]; then
             info "Waiting for K8S to be ready...#${i}"
+            check_if_need_update_mac
             check_if_need_reset
             sleep 30
         else
@@ -164,6 +165,15 @@ function wait_k8s_ready() {
     warn "K8S is not ready, pod status:"
     kubectl get pod -A
     error "Failed to configure K8S, please check pod status for troubleshooting."
+}
+
+# Check if need to update mac address
+function check_if_need_update_mac() {
+    new_interface_mac=$(ip link show "$interface" | grep link/ether | awk '{print $2}')
+    [[ "$new_interface_mac" = "$interface_mac" ]] && return
+    info "Changing MAC address for interface $interface..."
+    sudo macchanger -m "$interface_mac" "$interface"
+    sleep 30
 }
 
 # Check if need reset K8S
