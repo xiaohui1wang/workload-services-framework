@@ -158,6 +158,8 @@ data:
     dsa {
       dev wq0.0
       dev wq0.1
+      dev wq0.2
+      dev wq0.3
     }
     session { enable use-dma }
     plugins {
