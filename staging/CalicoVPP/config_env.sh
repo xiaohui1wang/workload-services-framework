@@ -23,8 +23,8 @@ function usage {
             --ipv4 <ipv4-address>: [Required] Specify ipv4 address on which K8S will be installed, generally, it's node private IPv4 address with 100Gbps bandwidth.
             --mtu 1500|9000: [Optional] Specify MTU, value can be 1500 or 9000. Default is 1500.
             --cidr <K8S-pod-CIDR>: [Optional] Specify K8S pod CIDR. Default is 10.244.0.0/16. Change default value only when it conflicts with testing environment.
-            --dsa-device <dsa-device-pci-num>: [Optional] Specify DSA device pci number for DSA memif testing, will get the first DSA device (for example: 6a:01.0) 
-                if not specify this parameter. Run command "lspci -v | grep 0b25" can get DSA device list.
+            --vpp-cores-start <vpp-cores-start-number>: [Optional] Specify which CPU core VPP starts from. Default is 0, which means 0 for VPP main, 1-$core_nums for 
+                VPP workers.
             --core-nums <core-numbers>: [Optional] Specify how many CPU cores will be used for the testing. Default is 1.
             --help|-h: [Optional] Show help messages.
 
