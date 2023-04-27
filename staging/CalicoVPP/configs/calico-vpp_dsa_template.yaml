@@ -143,6 +143,7 @@ data:
       pidfile /run/vpp/vpp.pid
       exec /etc/vpp/startup.exec
     }
+    logging { default-log-level debug default-syslog-log-level debug }
     api-trace { on }
     cpu {
         main-core VPP_MAIN_CORE_VALUE_TMP
