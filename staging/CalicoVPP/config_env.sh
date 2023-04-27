@@ -42,29 +42,6 @@ function check_conditions() {
     check_if_has_configured
     check_required_parameters
     check_and_get_interface_by_ipv4
-    if [[ "$config_mode" = "$CONFIG_MODE_DSA_MEMIF" ]]; then
-        check_and_get_default_dsa_device
-        bind_dsa_device
-        check_calicovpp_dsa_images
-    fi
-}
-
-# If not specify DSA device, then try to get default one
-function check_and_get_default_dsa_device() {
-    if [[ -z $dsa_device ]]; then
-        info "DSA device is emtpy, trying to get default device..."
-        dsa_device=$(lspci -v | grep 0b25 | head -1 | awk '{print $1}')
-        if [[ -z "$dsa_device" ]]; then
-            error "Failed to get DSA device, check if there are available DSA devices."
-        else
-            info "Will use default DSA device: $dsa_device"
-        fi
-    fi
-}
-
-# Bind DSA device
-function bind_dsa_device() {
-    sudo dpdk-devbind.py -b vfio-pci "$dsa_device" > /dev/null 2>&1 || error "Failed to bind DSA device: $dsa_device"
 }
 
 # Check and get NIC interface by IPV4 address
