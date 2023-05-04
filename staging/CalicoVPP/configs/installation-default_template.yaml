@@ -10,6 +10,7 @@ spec:
     linuxDataplane: VPP
     ipPools:
       - cidr: CIDR_VALUE_TMP
+        encapsulation: None
     mtu: MTU_VALUE_TMP
 
 ---
