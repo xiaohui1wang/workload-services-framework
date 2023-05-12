@@ -93,7 +93,7 @@ function setup_docker_config() {
     sudo mkdir -p /etc/docker
     sudo tee /etc/docker/daemon.json <<EOF
 {
-    "insecure-registries" : [],
+    "insecure-registries" : ["10.67.115.219:5000"],
     "exec-opts":["native.cgroupdriver=systemd"],
     "experimental": true,
     "registry-mirrors": []
