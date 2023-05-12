@@ -162,7 +162,7 @@ data:
       dev wq0.2
       dev wq0.3
     }
-    session { enable use-dma }
+    session { enable use-dma use-app-socket-api }
     plugins {
         plugin default { enable }
         plugin dpdk_plugin.so { enable }
