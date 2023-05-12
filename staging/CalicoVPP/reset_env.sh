@@ -100,6 +100,7 @@ function delete_k8s_config() {
     sudo rm -rf /var/lib/etcd/
     sudo rm -rf /var/run/vpp/
     sudo rm -rf "$HOME/.kube"
+    sudo rm -rf "/root/.kube"
 }
 
 function delete_docker_config() {
