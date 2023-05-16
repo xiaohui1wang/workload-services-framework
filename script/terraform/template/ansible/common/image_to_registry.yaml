@@ -1,8 +1,0 @@
-- hosts: controller-0
-  gather_facts: no
-  tasks:
-
-    - name: Transfer image(s) to docker registry
-      include_role:
-        name: image-to-registry
-

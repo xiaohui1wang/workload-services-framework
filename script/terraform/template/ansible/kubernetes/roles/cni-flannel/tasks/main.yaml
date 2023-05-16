@@ -1,4 +1,0 @@
-
-- name: install flannel
-  command: "kubectl apply -f {{ k8s_flannel_repo }}"
-

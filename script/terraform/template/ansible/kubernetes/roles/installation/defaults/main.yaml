@@ -1,6 +1,0 @@
-
-k8s_cni: flannel
-k8s_plugins: []
-k8s_enable_registry: true
-my_ip_list: ""
-
