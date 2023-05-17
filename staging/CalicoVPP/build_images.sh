@@ -6,7 +6,7 @@ source ./common.sh
 function usage {
     cat <<EOF
 
-        build_images.sh is used to build docker images for Calico VPP with DSA testing. After building, below images will be generated,
+        build_images.sh is used to build docker images for Calico VPP VCL with DSA testing. After building, below images will be generated,
             calicovpp_dsa_vcl_agent:v1
             calicovpp_dsa_vcl_vpp:v1
 
@@ -39,7 +39,7 @@ function clone_code() {
     git apply "${BASE_DIR}/patch/calicovpp.patch"
 
     # Copy vpp_dsa_rx.patch
-    cp ${BASE_DIR}/patch/0006-dsa-rx.patch ${CALICOVPP_DIR}/vpplink/binapi/patches/ || exit
+    cp "${BASE_DIR}/patch/0006-dsa-rx.patch" "${CALICOVPP_DIR}/vpplink/binapi/patches/" || exit
 }
 
 function build_images() {
@@ -47,8 +47,8 @@ function build_images() {
     info "Building Calico VPP agent image..."
     cd "${CALICOVPP_DIR}" || exit
     make -C ./calico-vpp-agent image
-    docker tag calicovpp/agent:latest ${AGENT_IMAGE_NAME}
-    docker push ${AGENT_IMAGE_NAME}
+    docker tag calicovpp/agent:latest "${AGENT_IMAGE_NAME}"
+    docker push "${AGENT_IMAGE_NAME}"
 
     # Copy version file
     cp ./calico-vpp-agent/version ./vpp-manager/images/ubuntu
@@ -56,8 +56,8 @@ function build_images() {
     # Build vpp bin and image
     info "Building Calico VPP vpp image..."
     make -C ./vpp-manager vpp imageonly
-    docker tag calicovpp/vpp:latest ${VPP_IMAGE_NAME}
-    docker push ${VPP_IMAGE_NAME}
+    docker tag calicovpp/vpp:latest "${VPP_IMAGE_NAME}"
+    docker push "${VPP_IMAGE_NAME}"
 }
 
 function show_images() {
@@ -90,7 +90,7 @@ VPP_DIR="${BASE_DIR}/vpp"
 rm -rf "${CALICOVPP_DIR}"
 rm -rf "${VPP_DIR}"
 
-#check_env
+check_env
 clone_code
 build_images
 show_images

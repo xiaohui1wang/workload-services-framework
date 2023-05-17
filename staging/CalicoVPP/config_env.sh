@@ -10,8 +10,8 @@ function usage {
         Before run this script, please run 'install_env.sh' to install testing environment and run 'build_images.sh' to build necessary docker images.
 
         Usage:
-            ./config_env.sh --mode dsa[sw] --ipv4 <ipv4-address> [--mtu 1500|9000] [--cidr <K8S-pod-CIDR>] [--dsa-device <dsa-device-pci-num>]
-                [--core-nums <core-numbers>] [--help|-h]
+            ./config_env.sh --mode dsa[sw] --ipv4 <ipv4-address> [--mtu 1500|9000] [--cidr <K8S-pod-CIDR>]
+                [--vpp-cores-start <vpp-cores-start-number>] [--core-nums <core-numbers>] [--help|-h]
 
         Examples:
             ./config_env.sh --mode dsa --ipv4 192.168.0.11                                    # Configure K8S with DSA interface
@@ -44,6 +44,7 @@ function check_conditions() {
     check_and_get_interface_by_ipv4
     if [[ "$config_mode" = "$CONFIG_MODE_DSA_MEMIF" ]]; then
         check_calicovpp_dsa_images
+        check_dsa_queue
     fi
 }
 
@@ -187,7 +188,6 @@ function save_configuration_parameters() {
         echo "NIC interface pci: $interface_pci"
         echo "MTU: $mtu"
         echo "K8S pod CIDR: $cidr"
-        echo "DSA device: ${dsa_device:-N/A}"
         echo "Core numbers: $core_nums"
         echo "VPP cores start: $vpp_cores_start"
         echo "Calico VPP MAC address: $interface_mac"
@@ -232,7 +232,6 @@ config_mode=""
 ipv4=""
 mtu=$MTU_1500
 cidr="10.244.0.0/16"
-dsa_device=""
 core_nums=1                       # Single core testing
 vpp_cores_start=0                 # 0 for VPP main, 1-$core_nums for VPP workers
 
@@ -282,12 +281,6 @@ do
             check_not_empty "$arg" "$1"
             check_cidr "$arg" "$1"
             cidr=$1
-            ;;
-        --dsa-device)
-            shift
-            check_not_empty "$arg" "$1"
-            check_dsa_device "$arg" "$1"
-            dsa_device=$1
             ;;
         --core-nums)
             shift

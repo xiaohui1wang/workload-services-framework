@@ -131,6 +131,12 @@ function check_if_has_configured() {
 
 # Check if Calico VPP with DSA images exists
 function check_calicovpp_dsa_images() {
-    docker images | grep  -q -e "^${AGENT_IMAGE_NAME%:*} *${IMAGE_VERSION}" || error "Cannot find Docker image: ${AGENT_IMAGE_NAME}"
-    docker images | grep  -q -e "^${VPP_IMAGE_NAME%:*} *${IMAGE_VERSION}" || error "Cannot find Docker image: ${VPP_IMAGE_NAME}"
+    docker images | grep  -q -e "^${AGENT_IMAGE_NAME%:*} *${IMAGE_VERSION}" || error "Cannot find Docker image: ${AGENT_IMAGE_NAME}, please run 'build_images.sh' firstly."
+    docker images | grep  -q -e "^${VPP_IMAGE_NAME%:*} *${IMAGE_VERSION}" || error "Cannot find Docker image: ${VPP_IMAGE_NAME}, please run 'build_images.sh' firstly."
+}
+
+# Check if DSA queues have been configured
+function check_dsa_queue() {
+    [[ -d /dev/dsa ]] || error "DSA queues have not been configured, please use command 'accel-config' to configure it."
+    [[ $(find /dev/dsa/ -name "wq*" | wc -l) -ge 4 ]] || error "Need at least 4 work queues, please use command 'accel-config list' to check it."
 }
