@@ -5,6 +5,14 @@
 # K8S version
 export K8S_VER=1.23.12-00
 
+# Docker registry
+export DOCKER_REGISTRY=10.67.115.219:5000
+
+# VPP Images
+export IMAGE_VERSION=v1
+export AGENT_IMAGE_NAME=${DOCKER_REGISTRY}/calicovpp_dsa_vcl_agent:${IMAGE_VERSION}
+export VPP_IMAGE_NAME=${DOCKER_REGISTRY}/calicovpp_dsa_vcl_vpp:${IMAGE_VERSION}
+
 # Dirs
 BASE_DIR=$(pwd)
 export BASE_DIR
@@ -123,6 +131,6 @@ function check_if_has_configured() {
 
 # Check if Calico VPP with DSA images exists
 function check_calicovpp_dsa_images() {
-    docker images | grep  -q -e "^calicovpp_dsa_vpp *v" || error "Cannot find Docker image: calicovpp_dsa_vpp:v1"
-    docker images | grep  -q -e "^calicovpp_dsa_agent *v1" || error "Cannot find Docker image: calicovpp_dsa_agent:v1"
+    docker images | grep  -q -e "^${AGENT_IMAGE_NAME%:*} *${IMAGE_VERSION}" || error "Cannot find Docker image: ${AGENT_IMAGE_NAME}"
+    docker images | grep  -q -e "^${VPP_IMAGE_NAME%:*} *${IMAGE_VERSION}" || error "Cannot find Docker image: ${VPP_IMAGE_NAME}"
 }

@@ -42,6 +42,9 @@ function check_conditions() {
     check_if_has_configured
     check_required_parameters
     check_and_get_interface_by_ipv4
+    if [[ "$config_mode" = "$CONFIG_MODE_DSA_MEMIF" ]]; then
+        check_calicovpp_dsa_images
+    fi
 }
 
 # Check and get NIC interface by IPV4 address
@@ -91,8 +94,10 @@ function prepare_calicovpp_dsa_yaml_files() {
     cp "$CALICOVPP_INSTALLATION_TMP_YAML" "$CALICOVPP_INSTALLATION_DEP_YAML"
     cp "$CALICOVPP_DSA_TMP_YAML" "$CALICOVPP_DEP_YAML"
     update_common_params_of_vpp_yaml
-    # Update DSA device
-    sed -i "s|DSA_DEVICE_VALUE_TMP|0000:${dsa_device}|g" "$CALICOVPP_DEP_YAML"
+    # Update agent image
+    sed -i "s|DSA_VCL_AGENT_IMAGE_TMP|${AGENT_IMAGE_NAME}|g" "$CALICOVPP_DEP_YAML"
+    # Update VPP image
+    sed -i "s|DSA_VCL_VPP_IMAGE_TMP|${VPP_IMAGE_NAME}|g" "$CALICOVPP_DEP_YAML"
     # Change buffer size when mtu is 9000
     [[ "$mtu" = "$MTU_9000" ]] && sed -i "s|buffers-per-numa.*|default data-size 10240|g" "$CALICOVPP_DEP_YAML"
 }

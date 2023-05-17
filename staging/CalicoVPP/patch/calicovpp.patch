@@ -1,8 +1,8 @@
 diff --git a/vpp-manager/Makefile b/vpp-manager/Makefile
-index bd7427b..005e9a2 100644
+index bea80ac..e728448 100644
 --- a/vpp-manager/Makefile
 +++ b/vpp-manager/Makefile
-@@ -59,6 +59,9 @@ clean-vpp:
+@@ -72,6 +72,9 @@ rebuild-vpp: vpp-build-env
  vpp: clone-vpp clean-vpp vpp-build-env
  	docker run --rm \
  		-e VPP_MGR_DIR=$(CURDIR) \
@@ -13,15 +13,12 @@ index bd7427b..005e9a2 100644
  		--user $$(id -u):$$(id -g) \
  		--network=host \
 diff --git a/vpplink/binapi/vpp_clone_current.sh b/vpplink/binapi/vpp_clone_current.sh
-index 65d9d5d..834a784 100755
+index 0b755bc..252fb1d 100755
 --- a/vpplink/binapi/vpp_clone_current.sh
 +++ b/vpplink/binapi/vpp_clone_current.sh
-@@ -1,6 +1,8 @@
- #!/bin/bash
- set -e
+@@ -109,3 +109,5 @@ git_apply_private 0003-acl-acl-plugin-custom-policies.patch
+ git_apply_private 0004-capo-Calico-Policies-plugin.patch
+ git_apply_private 0005-memif-fix-socket-name-null-termination.patch
  
-+exit 0
-+
- SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
- CACHE_DIR=$SCRIPTDIR/.cherries-cache
- 
++# Apply vpp dsa rx patch
++git_apply_private 0006-dsa-rx.patch
