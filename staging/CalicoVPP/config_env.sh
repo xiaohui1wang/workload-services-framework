@@ -43,7 +43,7 @@ function check_conditions() {
     check_required_parameters
     check_and_get_interface_by_ipv4
     if [[ "$config_mode" = "$CONFIG_MODE_DSA_MEMIF" ]]; then
-        check_calicovpp_dsa_images
+        # check_calicovpp_dsa_images
         check_dsa_queue
     fi
 }
@@ -96,9 +96,11 @@ function prepare_calicovpp_dsa_yaml_files() {
     cp "$CALICOVPP_DSA_TMP_YAML" "$CALICOVPP_DEP_YAML"
     update_common_params_of_vpp_yaml
     # Update agent image
-    sed -i "s|DSA_VCL_AGENT_IMAGE_TMP|${AGENT_IMAGE_NAME}|g" "$CALICOVPP_DEP_YAML"
+    # sed -i "s|DSA_VCL_AGENT_IMAGE_TMP|${AGENT_IMAGE_NAME}|g" "$CALICOVPP_DEP_YAML"
+    sed -i "s|DSA_VCL_AGENT_IMAGE_TMP|docker.io/calicovpp/agent:v3.25.1|g" "$CALICOVPP_DEP_YAML"
     # Update VPP image
-    sed -i "s|DSA_VCL_VPP_IMAGE_TMP|${VPP_IMAGE_NAME}|g" "$CALICOVPP_DEP_YAML"
+    # sed -i "s|DSA_VCL_VPP_IMAGE_TMP|${VPP_IMAGE_NAME}|g" "$CALICOVPP_DEP_YAML"
+    sed -i "s|DSA_VCL_VPP_IMAGE_TMP|docker.io/calicovpp/vpp:v3.25.1|g" "$CALICOVPP_DEP_YAML"
     # Change buffer size when mtu is 9000
     [[ "$mtu" = "$MTU_9000" ]] && sed -i "s|buffers-per-numa.*|default data-size 10240|g" "$CALICOVPP_DEP_YAML"
 }
