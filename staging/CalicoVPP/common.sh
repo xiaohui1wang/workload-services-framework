@@ -2,8 +2,10 @@
 
 # This script defines common functions
 
-# K8S version
-export K8S_VER=1.23.12-00
+# K8S/Docker version
+export K8S_VER=1.23.17-00
+export DOCKER_VER=5:20.10.24~3-0~ubuntu-jammy
+export CONTAINERD_VER=1.6.21-1
 
 # Docker registry
 export DOCKER_REGISTRY=10.67.115.219:5000
