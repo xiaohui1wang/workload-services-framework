@@ -1,7 +1,0 @@
-build*/*
-*__pycache__*
-*.pyc
-.idea
-logs/
-result/
-.vscode/*
