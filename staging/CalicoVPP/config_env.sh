@@ -30,7 +30,6 @@ function check_conditions() {
     info "Checking environment and configurations..."
     check_os
     check_swap
-    check_hugepages
     check_docker
     check_k8s
     check_if_has_configured
@@ -64,14 +63,14 @@ function configure_mtu() {
 # Prepar yaml files
 function prepare_yaml_files() {
     info "Preparing yaml files..."
-    cp "$CALICOVPP_OPERATOR_TMP_YAML" "$OPERATOR_DEP_YAML"
-    cp "$CALICOVPP_INSTALLATION_TMP_YAML" "$INSTALLATION_DEP_YAML"
+    cp "$OPERATOR_TMP_YAML" "$OPERATOR_DEP_YAML"
+    cp "$INSTALLATION_TMP_YAML" "$INSTALLATION_DEP_YAML"
     # Update CIDR
     sed -i "s|CIDR_VALUE_TMP|${cidr}|g" "$INSTALLATION_DEP_YAML"
     # Update MTU
     sed -i "s|MTU_VALUE_TMP|${mtu}|g" "$INSTALLATION_DEP_YAML"
     # Update NIC interface
-    sed -i "s|VPP_DATAPLANE_INTERFACE_VALUE_TMP|${interface}|g" "$INSTALLATION_DEP_YAML"
+    sed -i "s|DATAPLANE_INTERFACE_VALUE_TMP|${interface}|g" "$INSTALLATION_DEP_YAML"
 }
 
 # Init K8S and CNI
@@ -165,10 +164,10 @@ interface=""
 interface_pci=""
 interface_mac=""
 
-# Source yaml files used to deploy Calico VPP
-CALICOVPP_OPERATOR_TMP_YAML=$CONFIGS_DIR/tigera-operator.yaml
-CALICOVPP_INSTALLATION_TMP_YAML=$CONFIGS_DIR/installation-default_template.yaml
-# Target yaml files used to deploy Calico VPP
+# Source yaml files used to deploy Calico
+OPERATOR_TMP_YAML=$CONFIGS_DIR/tigera-operator.yaml
+INSTALLATION_TMP_YAML=$CONFIGS_DIR/installation-default_template.yaml
+# Target yaml files used to deploy Calico
 OPERATOR_DEP_YAML=$CONFIGS_DEP_DIR/tigera-operator.yaml
 INSTALLATION_DEP_YAML=$CONFIGS_DEP_DIR/installation-default.yaml
 

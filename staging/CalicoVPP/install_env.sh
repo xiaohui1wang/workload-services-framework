@@ -22,11 +22,10 @@ EOF
 
 function install_docker() {
     info "Installing Docker..."
-    DOCKER_VER=5:20.10.18~3-0~ubuntu-jammy
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     sudo add-apt-repository -y "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     sudo apt-get update
-    sudo apt-get -y install containerd.io=1.6.10-1 docker-ce=${DOCKER_VER} docker-ce-cli=${DOCKER_VER} --allow-change-held-packages
+    sudo apt-get -y install containerd.io=${CONTAINERD_VER} docker-ce=${DOCKER_VER} docker-ce-cli=${DOCKER_VER} --allow-change-held-packages
 
     setup_docker_proxy
     setup_docker_config

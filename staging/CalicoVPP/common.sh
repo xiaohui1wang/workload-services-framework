@@ -2,8 +2,10 @@
 
 # This script defines common functions
 
-# K8S version
-export K8S_VER=1.23.12-00
+# K8S/Docker version
+export K8S_VER=1.23.17-00
+export DOCKER_VER=5:20.10.24~3-0~ubuntu-jammy
+export CONTAINERD_VER=1.6.21-1
 
 # Dirs
 BASE_DIR=$(pwd)
@@ -76,21 +78,9 @@ function check_mac_address() {
     [[ "$2" =~ ^([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$ ]] || error "'$2' is not a valid MAC address."
 }
 
-# Check if DSA device exist. Format: var_name var_val
-function check_dsa_device() {
-    sudo lspci -v | grep 0b25 | awk '{print $1}' | grep -q -e "^${2}$" || error "DSA device '$2' does not exist."
-}
-
 # Check if swap is disabled
 function check_swap() {
     [[ -z "$(swapon -s)" ]] || error "Swap is enabled, please disable it and try again."
-}
-
-# Check hugepages, hugepage size should be 1G, hugepages should be >= 16
-function check_hugepages() {
-    grep Hugepagesize < /proc/meminfo | grep -q 1048576 || error "Hugepage size is not 1G."
-    hugepages=$(grep HugePages_Total < /proc/meminfo | awk '{print $2}')
-    [[ $hugepages -ge 16 ]] || error "Hugepages cannot be less than 16."
 }
 
 # Check OS
