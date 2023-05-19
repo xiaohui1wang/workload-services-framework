@@ -7,11 +7,14 @@ metadata:
 spec:
   # Configures Calico networking.
   calicoNetwork:
-    linuxDataplane: VPP
+    # Note: The ipPools section cannot be modified post-install.
     ipPools:
-      - cidr: CIDR_VALUE_TMP
-        encapsulation: None
+    - cidr: CIDR_VALUE_TMP
+      encapsulation: None
     mtu: MTU_VALUE_TMP
+    nodeAddressAutodetectionV4:
+      interface: VPP_DATAPLANE_INTERFACE_VALUE_TMP
+      #canReach: 192.168.1.1
 
 ---
 

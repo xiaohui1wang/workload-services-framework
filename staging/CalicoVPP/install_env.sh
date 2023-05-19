@@ -6,7 +6,7 @@ source ./common.sh
 function usage {
     cat <<EOF
 
-        install_env.sh is used to install necessary components for Calico VPP with DSA image building and testing.
+        install_env.sh is used to install necessary components for setting up K8S env.
 
         Usage:
             ./install_env.sh [--help|-h]
@@ -18,23 +18,6 @@ function usage {
             --help|-h: [Optional] Show help messages.
 
 EOF
-}
-
-function install_golang() {
-    GO_PKG=go1.19.3.linux-amd64.tar.gz
-    for i in $(seq 10); do
-        info "Installing Golang..."
-        if curl -OL https://golang.org/dl/${GO_PKG} && \
-            sudo rm -f /usr/local/bin/go && sudo rm -rf /usr/local/go && \
-            sudo tar -C /usr/local -xzf ${GO_PKG} && rm -f ${GO_PKG} && \
-            sudo ln -s /usr/local/go/bin/go /usr/local/bin/go; then
-            info "Installed Golang successfully."
-            return
-        fi
-        warn "Failed to install Golang, waiting 30s and retry...#${i}"
-        sleep 30
-    done
-    error "Failed to install Golang."
 }
 
 function install_docker() {
@@ -109,37 +92,6 @@ function install_k8s() {
     sudo apt-get -y install kubeadm="${K8S_VER}" kubelet="${K8S_VER}" kubectl="${K8S_VER}" || error "Failed to install K8S related components."
 }
 
-function install_dpdk_tool() {
-    DPDK_VER=21.05
-    DPDK_PKG=dpdk-${DPDK_VER}.tar.xz
-    for i in $(seq 10); do
-        info "Installing DPDK tool..."
-        if curl -OL https://fast.dpdk.org/rel/${DPDK_PKG} && \
-            sudo rm -f /usr/local/bin/dpdk-devbind.py && sudo rm -rf /usr/local/dpdk-* && \
-            sudo tar -C /usr/local -xf ${DPDK_PKG} && rm -f ${DPDK_PKG} && \
-            sudo ln -s /usr/local/dpdk-${DPDK_VER}/usertools/dpdk-devbind.py /usr/local/bin/dpdk-devbind.py; then
-            info "Installed DPDK tool successfully."
-            return
-        fi
-        warn "Failed to install DPDK tool, waiting 30s and retry...#${i}"
-        sleep 30
-    done
-    error "Failed to install DPDK tool."
-}
-
-function install_building_tools() {
-    info "Installing building components..."
-    sudo apt-get -y install make gcc git python3 ethtool net-tools || error "Failed to install building components."
-}
-
-function config_network_parameters() {
-    info "Configuring network parameters..."
-    sudo tee /etc/modules-load.d/95-vpp.conf <<EOF
-vfio-pci
-EOF
-    sudo modprobe vfio-pci || error "Failed to configure vfio-pci driver."
-}
-
 function disable_firewall() {
     info "Disabling firewall..."
     sudo ufw disable > /dev/null || error "Failed to disable firewall."
@@ -147,12 +99,6 @@ function disable_firewall() {
 
 function check_installation_status() {
     info "Checking installation status..."
-    # Check Golang
-    if [[ -x "$(command -v go)" ]]; then
-        info "Golang has been installed - OK"
-    else
-        warn "Golang has NOT been installed - FAILED"
-    fi
     # Check Docker and service
     if [[ -x "$(command -v docker)" ]]; then
         info "Docker has been installed - OK"
@@ -169,12 +115,6 @@ function check_installation_status() {
         info "K8S has been installed - OK"
     else
         warn "K8S has NOT been installed - FAILED"
-    fi
-    # Check DPDK tool
-    if [[ -x "$(command -v dpdk-devbind.py)" ]]; then
-        info "DPDK tool has been installed - OK"
-    else
-        warn "DPDK tool has NOT been installed - FAILED"
     fi
 }
 
@@ -197,11 +137,7 @@ done
 [[ -z "$UNKNOWN_ARGS" ]] || error "Unknown arguments:$UNKNOWN_ARGS"
 
 check_os
-install_golang
 install_docker
 install_k8s
-install_dpdk_tool
-install_building_tools
-config_network_parameters
 disable_firewall
 check_installation_status

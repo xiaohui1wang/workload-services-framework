@@ -5,14 +5,6 @@
 # K8S version
 export K8S_VER=1.23.12-00
 
-# Docker registry
-export DOCKER_REGISTRY=10.67.115.219:5000
-
-# VPP Images
-export IMAGE_VERSION=v1
-export AGENT_IMAGE_NAME=${DOCKER_REGISTRY}/calicovpp_dsa_vcl_agent:${IMAGE_VERSION}
-export VPP_IMAGE_NAME=${DOCKER_REGISTRY}/calicovpp_dsa_vcl_vpp:${IMAGE_VERSION}
-
 # Dirs
 BASE_DIR=$(pwd)
 export BASE_DIR
@@ -108,11 +100,6 @@ function check_os() {
     [[ -n "${os_name}" && -n "${os_ver}" ]] || error "Only Ubuntu 22.04 is supported."
 }
 
-# Check Golang
-function check_golang() {
-    [[ -x "$(command -v go)" ]] || error "Golang is not installed."
-}
-
 # Check docker service
 function check_docker() {
     [[ -x "$(command -v docker)" ]] || error "Docker is not installed."
@@ -127,16 +114,4 @@ function check_k8s() {
 # Check if K8S has been configured
 function check_if_has_configured() {
     sudo systemctl status kubelet > /dev/null && error "K8S has been configured, please run command './reset_env.sh -y' to reset it before configuring."
-}
-
-# Check if Calico VPP with DSA images exists
-function check_calicovpp_dsa_images() {
-    docker images | grep  -q -e "^${AGENT_IMAGE_NAME%:*} *${IMAGE_VERSION}" || error "Cannot find Docker image: ${AGENT_IMAGE_NAME}, please run 'build_images.sh' firstly."
-    docker images | grep  -q -e "^${VPP_IMAGE_NAME%:*} *${IMAGE_VERSION}" || error "Cannot find Docker image: ${VPP_IMAGE_NAME}, please run 'build_images.sh' firstly."
-}
-
-# Check if DSA queues have been configured
-function check_dsa_queue() {
-    [[ -d /dev/dsa ]] || error "DSA queues have not been configured, please use command 'accel-config' to configure it."
-    [[ $(find /dev/dsa/ -name "wq*" | wc -l) -ge 4 ]] || error "Need at least 4 work queues, please use command 'accel-config list' to check it."
 }
