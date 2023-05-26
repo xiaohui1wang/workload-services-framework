@@ -140,5 +140,5 @@ function check_calicovpp_dsa_images() {
 # Check if DSA queues have been configured
 function check_dsa_queue() {
     [[ -d /dev/dsa ]] || error "DSA queues have not been configured, please use command 'accel-config' to configure it."
-    [[ $(find /dev/dsa/ -name "wq*" | wc -l) -ge 4 ]] || error "Need at least 4 work queues, please use command 'accel-config list' to check it."
+    [[ $(find /dev/dsa/ -name "wq*" | wc -l) -ge 1 ]] || error "Need at least 1 work queue, please use command 'accel-config list' to check it."
 }
