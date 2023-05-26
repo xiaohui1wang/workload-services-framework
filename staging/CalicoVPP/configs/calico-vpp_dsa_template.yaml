@@ -158,9 +158,6 @@ data:
     }
     dsa {
       dev wq2.0
-      dev wq2.1
-      dev wq2.2
-      dev wq2.3
     }
     session { enable use-dma use-app-socket-api }
     plugins {
