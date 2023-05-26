@@ -39,7 +39,10 @@ function clone_code() {
     git apply "${BASE_DIR}/patch/calicovpp.patch"
 
     # Copy vpp_dsa_rx.patch
-    cp "${BASE_DIR}/patch/0006-dsa-rx.patch" "${CALICOVPP_DIR}/vpplink/binapi/patches/" || exit
+    # cp "${BASE_DIR}/patch/0006-dsa-rx.patch" "${CALICOVPP_DIR}/vpplink/binapi/patches/" || exit
+
+    # Copy vcl-wrk patch
+    cp "${BASE_DIR}/patch/vcl-wrk.patch" "${CALICOVPP_DIR}/vpplink/binapi/patches/" || exit
 }
 
 function build_images() {

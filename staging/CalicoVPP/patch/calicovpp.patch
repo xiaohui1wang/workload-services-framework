@@ -21,4 +21,4 @@ index 0b755bc..252fb1d 100755
  git_apply_private 0005-memif-fix-socket-name-null-termination.patch
  
 +# Apply vpp dsa rx patch
-+git_apply_private 0006-dsa-rx.patch
++git_apply_private vcl-wrk.patch
