@@ -2,9 +2,8 @@
 
 # This script defines common functions
 
-# K8S/Docker version
-export K8S_VER=1.23.17-00
-export DOCKER_VER=5:20.10.24~3-0~ubuntu-jammy
+# Versions
+export K8S_VER=1.24.4-00
 export CONTAINERD_VER=1.6.21-1
 
 # Dirs
@@ -90,10 +89,10 @@ function check_os() {
     [[ -n "${os_name}" && -n "${os_ver}" ]] || error "Only Ubuntu 22.04 is supported."
 }
 
-# Check docker service
-function check_docker() {
-    [[ -x "$(command -v docker)" ]] || error "Docker is not installed."
-    sudo systemctl status docker > /dev/null || error "Docker service is stopped."
+# Check containerd service
+function check_containerd() {
+    [[ -x "$(command -v containerd)" ]] || error "Containerd is not installed."
+    sudo systemctl status containerd > /dev/null || error "Containerd service is stopped."
 }
 
 # Check K8S

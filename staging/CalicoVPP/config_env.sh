@@ -7,7 +7,7 @@ function usage {
     cat <<EOF
 
         config_env.sh is used to configure K8S. 
-        Before run this script, please run 'install_env.sh' to install testing environment and run 'build_images.sh' to build necessary docker images.
+        Before run this script, please run 'install_env.sh' to install testing environment, such as containerd, kubelet, etc.
 
         Usage:
             ./config_env.sh --ipv4 <ipv4-address> [--mtu 1500|9000] [--cidr <K8S-pod-CIDR>] [--help|-h]
@@ -30,7 +30,7 @@ function check_conditions() {
     info "Checking environment and configurations..."
     check_os
     check_swap
-    check_docker
+    check_containerd
     check_k8s
     check_if_has_configured
     check_required_parameters

@@ -20,54 +20,58 @@ function usage {
 EOF
 }
 
-function install_docker() {
-    info "Installing Docker..."
+function install_containerd() {
+    info "Installing containerd..."
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     sudo add-apt-repository -y "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     sudo apt-get update
-    sudo apt-get -y install containerd.io=${CONTAINERD_VER} docker-ce=${DOCKER_VER} docker-ce-cli=${DOCKER_VER} --allow-change-held-packages
+    #sudo apt-get -y install containerd.io=${CONTAINERD_VER} docker-ce=${DOCKER_VER} docker-ce-cli=${DOCKER_VER} --allow-change-held-packages
+    sudo apt-get -y install containerd.io=${CONTAINERD_VER} --allow-change-held-packages
 
-    setup_docker_proxy
-    setup_docker_config
-    sudo usermod -aG docker "$USER" || error "Failed to add current user to docker group."
+    setup_containerd_proxy
+    setup_containerd_config
 
     sudo systemctl daemon-reload
-    sudo systemctl restart docker > /dev/null
-    # Check Docker status and restart if failed
+    sudo systemctl restart containerd > /dev/null
     for i in $(seq 10); do
-        if sudo systemctl status docker > /dev/null; then
-            info "Start Docker successfully."
+        if sudo systemctl status containerd > /dev/null; then
+            info "Start containerd successfully."
             return
         fi
-        warn "Failed to start Docker service, waiting 30s and retry...#${i}"
+        warn "Failed to start containerd service, waiting 30s and retry...#${i}"
         sleep 30
-        info "Starting Docker..."
-        sudo systemctl start docker > /dev/null
+        info "Starting containerd..."
+        sudo systemctl start containerd > /dev/null
     done
-    error "Failed to install Docker."
+    error "Failed to install containerd."
 }
 
-function setup_docker_proxy() {
+function setup_containerd_proxy() {
     info "Setting Docker proxy..."
-    sudo mkdir -p /etc/systemd/system/docker.service.d
+    sudo mkdir -p /etc/systemd/system/containerd.service.d
     if [[ -n "${http_proxy}" ]]; then
-        sudo tee /etc/systemd/system/docker.service.d/http-proxy.conf <<EOF
+        sudo tee /etc/systemd/system/containerd.service.d/http-proxy.conf <<EOF
 [Service]
 Environment="HTTP_PROXY=${http_proxy}"
 EOF
     fi
     if [[ -n "${https_proxy}" ]]; then
-        sudo tee /etc/systemd/system/docker.service.d/https-proxy.conf <<EOF
+        sudo tee /etc/systemd/system/containerd.service.d/https-proxy.conf <<EOF
 [Service]
 Environment="HTTPS_PROXY=${https_proxy}"
 EOF
     fi
     if [[ -n "${no_proxy}" ]]; then
-        sudo tee /etc/systemd/system/docker.service.d/no-proxy.conf <<EOF
+        sudo tee /etc/systemd/system/containerd.service.d/no-proxy.conf <<EOF
 [Service]
 Environment="NO_PROXY=${no_proxy}"
 EOF
     fi
+}
+
+function setup_containerd_config() {
+    info "Setting containerd configuration..."
+    sudo cp configs/containerd/config.toml /etc/containerd/config.toml  
 }
 
 function setup_docker_config() {
@@ -98,16 +102,16 @@ function disable_firewall() {
 
 function check_installation_status() {
     info "Checking installation status..."
-    # Check Docker and service
-    if [[ -x "$(command -v docker)" ]]; then
-        info "Docker has been installed - OK"
+    # Check containerd and service
+    if [[ -x "$(command -v containerd)" ]]; then
+        info "Containerd has been installed - OK"
     else
-        warn "Docker has NOT been installed - FAILED"
+        warn "Containerd has NOT been installed - FAILED"
     fi
-    if sudo systemctl status docker > /dev/null; then
-        info "Docker service has been started - OK"
+    if sudo systemctl status containerd > /dev/null; then
+        info "Containerd service has been started - OK"
     else
-        warn "Docker service has NOT been started - FAILED"
+        warn "Containerd service has NOT been started - FAILED"
     fi
     # Check K8S
     if [[ -x "$(command -v kubeadm)" && -x "$(command -v kubelet)" && -x "$(command -v kubectl)" ]]; then
@@ -136,7 +140,7 @@ done
 [[ -z "$UNKNOWN_ARGS" ]] || error "Unknown arguments:$UNKNOWN_ARGS"
 
 check_os
-install_docker
+install_containerd
 install_k8s
 disable_firewall
 check_installation_status

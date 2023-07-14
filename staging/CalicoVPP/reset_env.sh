@@ -31,7 +31,7 @@ function reset_k8s() {
     do_reset_k8S
     delete_k8s_config
     flush_iptables
-    restart_docker_service
+    restart_containerd_service
     rebind_nic_interface
     info "Succeed to reset K8S."
 }
@@ -42,7 +42,7 @@ function uninstall_k8s() {
     do_uninstall_k8S
     delete_k8s_config
     flush_iptables
-    restart_docker_service
+    restart_containerd_service
     rebind_nic_interface
     info "Succeed to uninstall K8S."
 }
@@ -52,8 +52,8 @@ function uninstall_all() {
     do_reset_k8S
     do_uninstall_k8S
     delete_k8s_config
-    do_uninstall_docker
-    delete_docker_config
+    do_uninstall_docker_containerd
+    delete_docker_containerd_config
     uninstall_golang
     uninstall_dpdk_tool
     uninstall_unused_packages
@@ -73,14 +73,16 @@ function do_uninstall_k8S() {
     sudo apt purge -y kubeadm kubectl kubelet --allow-change-held-packages
 }
 
-function do_uninstall_docker() {
-    info "Uninstalling Docker..."
+function do_uninstall_docker_containerd() {
+    info "Uninstalling Docker and containerd..."
     if [[ -x "$(command -v docker)" ]]; then
         docker stop "$(docker ps -aq)"
         docker system prune -f
         docker volume rm -f "$(docker volume ls -q)"
         docker image rm -f "$(docker image ls -q)"
         sudo systemctl stop docker
+    fi
+    if [[ -x "$(command -v containerd)" ]]; then
         sudo systemctl stop containerd
     fi
     sudo apt purge docker-ce docker-ce-cli containerd.io -y
@@ -103,24 +105,24 @@ function delete_k8s_config() {
     sudo rm -rf "/root/.kube"
 }
 
-function delete_docker_config() {
-    info "Deleting Docker configurations..."
+function delete_docker_containerd_config() {
+    info "Deleting Docker and containerd configurations..."
     sudo rm -rf /etc/docker/
     sudo rm -rf /etc/systemd/system/docker.service.d/
     sudo rm -rf /var/lib/docker
     sudo rm -rf /var/lib/containerd
     sudo rm -rf /etc/modules-load.d/containerd.conf 
+    sudo rm -rf /etc/systemd/system/containerd.service.d/
 }
 
-function restart_docker_service() {
-    info "Restarting Docker service..."
-    if ! [[ -x "$(command -v docker)" ]]; then
-        warn "Docker has NOT been installed."
+function restart_containerd_service() {
+    info "Restarting containerd service..."
+    if ! [[ -x "$(command -v containerd)" ]]; then
+        warn "Containerd has NOT been installed."
         return
     fi
     sudo systemctl daemon-reload || error "Failed to reload daemon."
     sudo systemctl restart containerd || error "Failed to restart containerd service."
-    sudo systemctl restart docker || error "Failed to restart Docker service."
 }
 
 function flush_iptables() {
