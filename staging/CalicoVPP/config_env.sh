@@ -83,6 +83,7 @@ function init_k8s_and_cni() {
     sudo cp -i /etc/kubernetes/admin.conf "$HOME/.kube/config"
     sudo chown "$(id -u):$(id -g)" "$HOME/.kube/config"
     kubectl taint nodes --all node-role.kubernetes.io/master-
+    kubectl taint nodes --all node-role.kubernetes.io/control-plane-
     info "Installing CNI..."
     kubectl create -f "$OPERATOR_DEP_YAML"
     sleep 5
