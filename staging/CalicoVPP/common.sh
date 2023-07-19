@@ -3,7 +3,7 @@
 # This script defines common functions
 
 # Versions
-export K8S_VER=1.24.4-00
+export K8S_VER=1.26.6-00
 export CONTAINERD_VER=1.6.21-1
 
 # Dirs

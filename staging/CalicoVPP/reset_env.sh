@@ -39,6 +39,7 @@ function reset_k8s() {
 function uninstall_k8s() {
     confirm "K8S will be uninstalled"
     do_reset_k8S
+    delete_apt_source_file
     do_uninstall_k8S
     delete_k8s_config
     flush_iptables
@@ -50,6 +51,7 @@ function uninstall_k8s() {
 function uninstall_all() {
     confirm "All components will be uninstalled"
     do_reset_k8S
+    delete_apt_source_file
     do_uninstall_k8S
     delete_k8s_config
     do_uninstall_docker_containerd
@@ -113,6 +115,11 @@ function delete_docker_containerd_config() {
     sudo rm -rf /var/lib/containerd
     sudo rm -rf /etc/modules-load.d/containerd.conf 
     sudo rm -rf /etc/systemd/system/containerd.service.d/
+}
+
+function delete_apt_source_file() {
+    info "Deleting apt source file..."
+    sudo rm -rf /etc/apt/sources.list.d/*kubernetes*
 }
 
 function restart_containerd_service() {

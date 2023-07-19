@@ -95,6 +95,12 @@ function install_k8s() {
     sudo apt-get -y install kubeadm="${K8S_VER}" kubelet="${K8S_VER}" kubectl="${K8S_VER}" || error "Failed to install K8S related components."
 }
 
+function enable_netfilter() {
+    info "Enabling netfilter..."
+    sudo modprobe br_netfilter
+    sudo sysctl -p /etc/sysctl.conf
+}
+
 function disable_firewall() {
     info "Disabling firewall..."
     sudo ufw disable > /dev/null || error "Failed to disable firewall."
@@ -143,4 +149,5 @@ check_os
 install_containerd
 install_k8s
 disable_firewall
+enable_netfilter
 check_installation_status
