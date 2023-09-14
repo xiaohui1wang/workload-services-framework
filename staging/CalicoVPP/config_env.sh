@@ -71,6 +71,8 @@ function prepare_yaml_files() {
     sed -i "s|MTU_VALUE_TMP|${mtu}|g" "$INSTALLATION_DEP_YAML"
     # Update NIC interface
     sed -i "s|DATAPLANE_INTERFACE_VALUE_TMP|${interface}|g" "$INSTALLATION_DEP_YAML"
+    # Update IPV4
+    sed -i "s|DATAPLANE_IP_VALUE_TMP|${ipv4}|g" "$INSTALLATION_DEP_YAML"
 }
 
 # Init K8S and CNI

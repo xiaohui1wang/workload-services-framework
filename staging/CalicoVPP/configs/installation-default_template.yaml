@@ -13,8 +13,8 @@ spec:
       encapsulation: None
     mtu: MTU_VALUE_TMP
     nodeAddressAutodetectionV4:
-      interface: DATAPLANE_INTERFACE_VALUE_TMP
-      #canReach: 192.168.1.1
+      #interface: DATAPLANE_INTERFACE_VALUE_TMP
+      canReach: DATAPLANE_IP_VALUE_TMP
 
 ---
 
