@@ -98,7 +98,7 @@ function delete_k8s_config() {
     sudo rm -rf /etc/cni/
     sudo rm -rf /opt/cni/
     sudo rm -rf /var/lib/cni/
-    sudo rm -rf /var/run/calico/
+    #sudo rm -rf /var/run/calico/
     sudo rm -rf /var/lib/calico
     sudo rm -rf /var/etcd
     sudo rm -rf /var/lib/etcd/
