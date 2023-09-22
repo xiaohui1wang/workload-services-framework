@@ -10,7 +10,7 @@ function usage {
         Before run this script, please run 'install_env.sh' to install testing environment, such as containerd, kubelet, etc.
 
         Usage:
-            ./config_env.sh --ipv4 <ipv4-address> [--mtu 1500|9000] [--cidr <K8S-pod-CIDR>] [--help|-h]
+            ./config_env.sh --ipv4 <ipv4-address> [--dataplane Iptables|BPF] [--mtu 1500|9000] [--cidr <K8S-pod-CIDR>] [--help|-h]
 
         Examples:
             ./config_env.sh --ipv4 192.168.0.11                                    # Configure K8S
@@ -18,6 +18,7 @@ function usage {
 
         Parameters:
             --ipv4 <ipv4-address>: [Required] Specify ipv4 address on which K8S will be installed, generally, it's node private IPv4 address with 100Gbps bandwidth.
+            --dataplane Iptables|BPF: [Optional] Specify dataplane for Calico, value can be Iptables or BPF. Default is Iptables.
             --mtu 1500|9000: [Optional] Specify MTU, value can be 1500 or 9000. Default is 1500.
             --cidr <K8S-pod-CIDR>: [Optional] Specify K8S pod CIDR. Default is 10.244.0.0/16. Change default value only when it conflicts with testing environment.
             --help|-h: [Optional] Show help messages.
@@ -65,6 +66,8 @@ function prepare_yaml_files() {
     info "Preparing yaml files..."
     cp "$OPERATOR_TMP_YAML" "$OPERATOR_DEP_YAML"
     cp "$INSTALLATION_TMP_YAML" "$INSTALLATION_DEP_YAML"
+    # Update DATAPLANE
+    sed -i "s|DATAPLANE_TMP|${dataplane}|g" "$INSTALLATION_DEP_YAML"
     # Update CIDR
     sed -i "s|CIDR_VALUE_TMP|${cidr}|g" "$INSTALLATION_DEP_YAML"
     # Update MTU
@@ -137,6 +140,7 @@ function save_configuration_parameters() {
     {
         echo "K8S controller IP address: $ipv4"
         echo "NIC interface: $interface"
+        echo "Dataplane: $dataplane"
         echo "NIC interface pci: $interface_pci"
         echo "MTU: $mtu"
         echo "K8S pod CIDR: $cidr"
@@ -162,6 +166,11 @@ ipv4=""
 mtu=$MTU_1500
 cidr="10.244.0.0/16"
 
+# Dataplane
+DATAPLANE_IPTABLES="Iptables"
+DATAPLANE_BPF="BPF"
+dataplane=${DATAPLANE_IPTABLES}
+
 # Parameters that will be used for deployment and E2E testing
 interface=""
 interface_pci=""
@@ -185,6 +194,13 @@ do
             check_not_empty "$arg" "$1"
             check_ipv4_address "$arg" "$1"
             ipv4=$1
+            ;;
+        --dataplane)
+            shift
+            check_not_empty "$arg" "$1"
+            dataplane_values=("$DATAPLANE_IPTABLES" "$DATAPLANE_BPF")
+            check_value_exist "$arg" "$1" "${dataplane_values[@]}"
+            dataplane=$1
             ;;
         --mtu)
             shift
@@ -216,6 +232,9 @@ mkdir -p "$CONFIGS_DEP_DIR"
 
 config_k8s
 save_configuration_parameters
+
+info "Dataplane:"
+kubectl get installation.operator.tigera.io default -o yaml | grep linuxDataplane | head -1
 
 info "Succeed to configure K8S, below are configuration parameters:"
 cat "$CONFIG_PARAMS_FILE"
