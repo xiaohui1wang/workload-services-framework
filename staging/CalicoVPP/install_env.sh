@@ -95,6 +95,24 @@ function install_k8s() {
     sudo apt-get -y install kubeadm="${K8S_VER}" kubelet="${K8S_VER}" kubectl="${K8S_VER}" || error "Failed to install K8S related components."
 }
 
+function install_dpdk_tool() {
+    DPDK_VER=21.05
+    DPDK_PKG=dpdk-${DPDK_VER}.tar.xz
+    for i in $(seq 10); do
+        info "Installing DPDK tool..."
+        if curl -OL https://fast.dpdk.org/rel/${DPDK_PKG} && \
+            sudo rm -f /usr/local/bin/dpdk-devbind.py && sudo rm -rf /usr/local/dpdk-* && \
+            sudo tar -C /usr/local -xf ${DPDK_PKG} && rm -f ${DPDK_PKG} && \
+            sudo ln -s /usr/local/dpdk-${DPDK_VER}/usertools/dpdk-devbind.py /usr/local/bin/dpdk-devbind.py; then
+            info "Installed DPDK tool successfully."
+            return
+        fi
+        warn "Failed to install DPDK tool, waiting 30s and retry...#${i}"
+        sleep 30
+    done
+    error "Failed to install DPDK tool."
+}
+
 function enable_netfilter() {
     info "Enabling netfilter..."
     sudo modprobe br_netfilter
@@ -125,6 +143,12 @@ function check_installation_status() {
     else
         warn "K8S has NOT been installed - FAILED"
     fi
+    # Check DPDK tool
+    if [[ -x "$(command -v dpdk-devbind.py)" ]]; then
+        info "DPDK tool has been installed - OK"
+    else
+        warn "DPDK tool has NOT been installed - FAILED"
+    fi
 }
 
 ##############################################################
@@ -148,6 +172,7 @@ done
 check_os
 install_containerd
 install_k8s
+install_dpdk_tool
 disable_firewall
 enable_netfilter
 check_installation_status
