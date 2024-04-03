@@ -24,6 +24,8 @@ function install_containerd() {
     info "Installing containerd..."
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
     sudo add-apt-repository -y "deb [arch=$(dpkg --print-architecture)] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    #Fix issue that cannot find public key B53DC80D13EDEF05
+    sudo apt-key adv --keyserver-options http-proxy=${http_proxy} --keyserver keyserver.ubuntu.com --recv-keys B53DC80D13EDEF05
     sudo apt-get update
     #sudo apt-get -y install containerd.io=${CONTAINERD_VER} docker-ce=${DOCKER_VER} docker-ce-cli=${DOCKER_VER} --allow-change-held-packages
     sudo apt-get -y install containerd.io=${CONTAINERD_VER} --allow-change-held-packages
