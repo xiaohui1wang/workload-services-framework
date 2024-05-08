@@ -32,7 +32,7 @@ function import_images() {
   export no_proxy=$no_proxy,$REPO_IP
 
   # images_containerd_K8SVER_CalicoVER
-  K8S_CALICO_VER=images_containerd_1.26.6_3.25.1
+  K8S_CALICO_VER=images_containerd_1.28.9_3.25.1
   [ -d ${K8S_CALICO_VER} ] || mkdir ${K8S_CALICO_VER}
   cd ${K8S_CALICO_VER} || exit 1
 
@@ -44,14 +44,14 @@ function import_images() {
     docker.io/calico/node:v3.25.1
     docker.io/calico/pod2daemon-flexvol:v3.25.1
     docker.io/calico/typha:v3.25.1
-    k8s.gcr.io/pause:3.6
+    registry.k8s.io/pause:3.9
     quay.io/tigera/operator:v1.29.3
-    registry.k8s.io/coredns/coredns:v1.9.3
-    registry.k8s.io/etcd:3.5.6-0
-    registry.k8s.io/kube-apiserver:v1.26.6
-    registry.k8s.io/kube-controller-manager:v1.26.6
-    registry.k8s.io/kube-proxy:v1.26.6
-    registry.k8s.io/kube-scheduler:v1.26.6
+    registry.k8s.io/coredns/coredns:v1.10.1
+    registry.k8s.io/etcd:3.5.12-0
+    registry.k8s.io/kube-apiserver:v1.28.9
+    registry.k8s.io/kube-controller-manager:v1.28.9
+    registry.k8s.io/kube-proxy:v1.28.9
+    registry.k8s.io/kube-scheduler:v1.28.9
     registry.k8s.io/pause:3.9'
 
   REPO=http://${REPO_IP}:8080/calico_vpp/images/${K8S_CALICO_VER}
@@ -71,7 +71,7 @@ function import_images() {
       wget "${REPO}/${img_file}"
     fi
     info "Importing ${img}..."
-    sudo ctr -n=k8s.io image import "${img_file}"
+    sudo ctr -n=k8s.io image import "${img_file}" 2>/dev/null
   done
 
   info "Succeed."
