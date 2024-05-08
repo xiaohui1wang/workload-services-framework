@@ -81,7 +81,7 @@ function prepare_yaml_files() {
 # Init K8S and CNI
 function init_k8s_and_cni() {
     info "Initializing K8S, this may take some time..."
-    sudo kubeadm init --pod-network-cidr="${cidr}" --apiserver-advertise-address="${ipv4}" --kubernetes-version="${K8S_VER/-00/}" || \
+    sudo kubeadm init --pod-network-cidr="${cidr}" --apiserver-advertise-address="${ipv4}" --kubernetes-version="${K8S_VER%-*}" || \
         error "Failed to initialize K8S."
     sleep 5
     mkdir -p "$HOME/.kube"

@@ -3,8 +3,8 @@
 # This script defines common functions
 
 # Versions
-export K8S_VER=1.26.6-00
-export CONTAINERD_VER=1.6.21-1
+export K8S_VER=1.28.9-2.1
+export CONTAINERD_VER=1.6.31-1
 
 # Dirs
 BASE_DIR=$(pwd)

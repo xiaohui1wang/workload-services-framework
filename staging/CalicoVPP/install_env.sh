@@ -98,11 +98,12 @@ function install_k8s() {
     #sudo add-apt-repository -y "deb [arch=$(dpkg --print-architecture)] http://apt.kubernetes.io/ kubernetes-xenial main"
 
     # New official method, v1.26
-    #echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.26/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-    #sudo rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg && curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.26/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-    
+    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+    sudo rm -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg && curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
     # Use aliyun repo
-    echo "deb https://mirrors.aliyun.com/kubernetes/apt kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+    #echo "deb https://mirrors.aliyun.com/kubernetes/apt kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
     sudo apt-get update || error "Failed to update apt repository."
     sudo apt-get -y install kubeadm="${K8S_VER}" kubelet="${K8S_VER}" kubectl="${K8S_VER}" || error "Failed to install K8S related components."
 }
