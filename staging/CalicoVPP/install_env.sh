@@ -137,6 +137,6 @@ done
 
 check_os
 install_docker
-install_k8s
-disable_firewall
-check_installation_status
+#install_k8s
+#disable_firewall
+#check_installation_status

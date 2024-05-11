@@ -4,7 +4,8 @@
 
 # K8S/Docker version
 export K8S_VER=1.23.17-00
-export DOCKER_VER=5:20.10.24~3-0~ubuntu-jammy
+#export DOCKER_VER=5:20.10.24~3-0~ubuntu-jammy
+export DOCKER_VER=5:24.0.9-1~ubuntu.22.04~jammy
 export CONTAINERD_VER=1.6.21-1
 
 # Dirs
